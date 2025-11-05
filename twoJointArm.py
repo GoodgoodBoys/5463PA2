@@ -11,10 +11,10 @@ show_animation = True
 fig = plt.figure()
 point = []
 
+# Setting lenth of arms
 l1 = 1
 l2 = 0.5
 
-Kp = 100
 dt = 0.01
 
 if show_animation:
@@ -34,17 +34,21 @@ def two_joint_arm(path_points):
             x = r_max * math.cos(theta_dir)
             y = r_max * math.sin(theta_dir)
 
-        cos_theta2 = (x**2 + y**2 - l1**2 - l2**2)/(2*l1*l2)
-        cos_theta2 = np.clip(cos_theta2, -1.0, 1.0)
-        theta2 = math.acos(cos_theta2)
+        # Get the theta2 first
+        # theta2 = 180 - beta
+        beta = (x**2 + y**2 - l1**2 - l2**2)/(2*l1*l2)
+        beta = np.clip(beta, -1.0, 1.0)
+        theta2 = math.acos(beta)
 
-        tmp = math.atan2(l2*math.sin(theta2), l1 + l2*math.cos(theta2))
-        theta1 = math.atan2(y, x) - tmp
+        # Calculate alpha with theta2
+        # theta1 = tan(x/y) - alpha
+        alpha = math.atan2(l2*math.sin(theta2), l1 + l2*math.cos(theta2))
+        theta1 = math.atan2(y, x) - alpha
 
         if theta1 < 0:
             theta2 = -theta2
-            tmp = math.atan2(l2*math.sin(theta2), l1 + l2*math.cos(theta2))
-            theta1 = math.atan2(y, x) - tmp
+            alpha = math.atan2(l2*math.sin(theta2), l1 + l2*math.cos(theta2))
+            theta1 = math.atan2(y, x) - alpha
 
         x_actual = l1*math.cos(theta1) + l2*math.cos(theta1+theta2)
         y_actual = l1*math.sin(theta1) + l2*math.sin(theta1+theta2)
@@ -52,6 +56,8 @@ def two_joint_arm(path_points):
         plot_arm(theta1, theta2, x_actual, y_actual)
 
 
+# Refer Start ## Yuxiang Ding
+# https://github.com/AtsushiSakai/PythonRobotics.git
 def plot_arm(theta1, theta2, target_x, target_y):  # pragma: no cover
     shoulder = np.array([0, 0])
     elbow = shoulder + np.array([l1 * np.cos(theta1), l1 * np.sin(theta1)])
@@ -97,11 +103,11 @@ def plot_arm(theta1, theta2, target_x, target_y):  # pragma: no cover
         plt.pause(dt)
 
     return wrist
+# Refer End ## Yuxiang Ding
 
 def ang_diff(theta1, theta2):
     # Returns the difference between two angles in the range -pi to +pi
     return angle_mod(theta1 - theta2)
-
 
 def click(event):
     global x, y
@@ -127,8 +133,6 @@ def click(event):
 
         two_joint_arm(path_points)
 
-
-
 def main():  # pragma: no cover
     fig.canvas.mpl_connect("button_press_event", click)
     # fig.canvas.mpl_connect("button_release_event", click_done)
@@ -147,31 +151,6 @@ def main():  # pragma: no cover
     plt.show()
     plt.pause(10)
 
-
 if __name__ == "__main__":
     # animation()
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
